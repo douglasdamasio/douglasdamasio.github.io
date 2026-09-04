@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>sysdesign.gg — System design prep, built like a product</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap');
+
+  :root{
+    --bg:#08080B;
+    --glass:rgba(255,255,255,0.045);
+    --glass-border:rgba(255,255,255,0.09);
+    --glass-hover:rgba(255,255,255,0.075);
+    --text:#F4F4F6;
+    --muted:#9391A0;
+    --violet:#8B5CF6;
+    --violet-soft:#A78BFA;
+    --cyan:#22D3EE;
+    --amber:#FBBF24;
+    --mint:#34D399;
+    --rose:#FB7185;
+    --crimson:#DC2626;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background: var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    line-height:1.5;
+    overflow-x:hidden;
+    position:relative;
+  }
+  .display{ font-family:'Sora', sans-serif; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  a{ color:inherit; text-decoration:none; }
+  ul{ list-style:none; }
+  img,svg{ display:block; max-width:100%; }
+  .wrap{ max-width:1120px; margin:0 auto; padding:0 24px; }
+  button{ font-family:'Inter', sans-serif; border:none; background:none; cursor:pointer; color:inherit; }
+
+  /* ---------- ambient background blobs (behind everything, fixed) ---------- */
+  .ambient{ position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+  .blob{ position:absolute; border-radius:50%; filter:blur(70px); opacity:0.5; }
+  .blob-1{ width:520px; height:520px; top:-160px; left:-120px; background:radial-gradient(circle, rgba(139,92,246,0.55), transparent 70%); animation:blobFloat1 22s ease-in-out infinite; }
+  .blob-2{ width:460px; height:460px; top:20%; right:-160px; background:radial-gradient(circle, rgba(34,211,238,0.4), transparent 70%); animation:blobFloat2 26s ease-in-out infinite; }
+  .blob-3{ width:400px; height:400px; bottom:-120px; left:30%; background:radial-gradient(circle, rgba(139,92,246,0.3), transparent 70%); animation:blobFloat3 30s ease-in-out infinite; }
+  @keyframes blobFloat1{ 0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(60px,80px) scale(1.15); } }
+  @keyframes blobFloat2{ 0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(-70px,60px) scale(0.9); } }
+  @keyframes blobFloat3{ 0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(40px,-50px) scale(1.1); } }
+
+  main, nav, footer{ position:relative; z-index:1; }
+
+  /* ---------- nav ---------- */
+  nav{ position:sticky; top:0; z-index:50; background:rgba(8,8,11,0.72); backdrop-filter:blur(16px); border-bottom:1px solid var(--glass-border); }
+  nav .wrap{ display:flex; align-items:center; justify-content:space-between; padding-top:14px; padding-bottom:14px; }
+  .brand{ display:flex; align-items:center; gap:10px; font-family:'Sora',sans-serif; font-weight:800; font-size:16px; }
+  .brand-mark{ width:30px; height:30px; border-radius:9px; background:linear-gradient(140deg,var(--violet),var(--cyan)); display:flex; align-items:center; justify-content:center; box-shadow:0 0 22px rgba(139,92,246,0.5); animation:markPulse 3.2s ease-in-out infinite; }
+  @keyframes markPulse{ 0%,100%{ box-shadow:0 0 18px rgba(139,92,246,0.4); } 50%{ box-shadow:0 0 30px rgba(139,92,246,0.7); } }
+  .brand-mark svg{ width:16px; height:16px; }
+  nav .links{ display:flex; align-items:center; gap:26px; font-size:13.5px; color:var(--muted); }
+  nav .links a{ position:relative; padding-bottom:3px; transition:color .15s ease; }
+  nav .links a::after{ content:""; position:absolute; left:0; bottom:0; width:0; height:1.5px; background:linear-gradient(90deg,var(--violet),var(--cyan)); transition:width .25s ease; }
+  nav .links a:hover{ color:var(--text); }
+  nav .links a:hover::after{ width:100%; }
+  .nav-cta{ font-family:'Sora',sans-serif; font-weight:700; font-size:13px; padding:9px 18px; border-radius:11px; background:linear-gradient(100deg,var(--violet),var(--cyan)); color:#0A0A0F; transition:transform .15s ease; }
+  .nav-cta:hover{ transform:translateY(-1px); }
+  @media (max-width:760px){ nav .links{ display:none; } }
+
+  /* ---------- hero ---------- */
+  .hero{ padding:100px 0 60px; }
+  .eyebrow{ display:inline-flex; align-items:center; gap:8px; font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color:var(--violet-soft); background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.3); border-radius:999px; padding:6px 14px; margin-bottom:22px; }
+  .eyebrow .dot{ width:6px; height:6px; border-radius:50%; background:var(--mint); box-shadow:0 0 8px var(--mint); animation:dotPulse 1.8s ease-in-out infinite; }
+  @keyframes dotPulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
+
+  .hero-grid{ display:grid; grid-template-columns:1.05fr 0.95fr; gap:52px; align-items:center; }
+  @media (max-width:900px){ .hero-grid{ grid-template-columns:1fr; } }
+
+  h1{ font-family:'Sora',sans-serif; font-weight:800; font-size:clamp(32px,4.8vw,54px); line-height:1.08; letter-spacing:-0.02em; margin-bottom:20px; }
+  h1 .grad{ background-image:linear-gradient(100deg,#F4F4F6,var(--violet-soft),var(--cyan),#F4F4F6); background-size:300% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; animation:shine 7s linear infinite; }
+  .hero p.lede{ font-size:16.5px; color:var(--muted); max-width:490px; margin-bottom:30px; }
+  .hero-ctas{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:38px; }
+
+  .btn-primary{ font-family:'Sora',sans-serif; font-weight:700; font-size:14.5px; padding:14px 26px; border-radius:14px; color:#0A0A0F; background:linear-gradient(100deg,var(--violet),var(--cyan),var(--violet)); background-size:220% 100%; animation:shine 3.5s linear infinite; display:inline-flex; align-items:center; gap:8px; transition:transform .15s ease, box-shadow .3s ease; }
+  .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 10px 30px rgba(139,92,246,0.35); }
+  .btn-ghost{ font-family:'Sora',sans-serif; font-weight:600; font-size:14.5px; padding:14px 22px; border-radius:14px; color:var(--text); background:var(--glass); border:1px solid var(--glass-border); display:inline-flex; align-items:center; gap:8px; transition:background .15s ease, transform .15s ease; }
+  .btn-ghost:hover{ background:var(--glass-hover); transform:translateY(-2px); }
+
+  .stat-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; max-width:480px; }
+  @media (max-width:520px){ .stat-row{ grid-template-columns:repeat(2,1fr); } }
+  .stat b{ display:block; font-family:'Sora',sans-serif; font-weight:800; font-size:23px; }
+  .stat span{ font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+
+  .hero-visual{ position:relative; display:flex; justify-content:center; }
+  .mascot-card{ width:270px; background:var(--glass); border:1px solid var(--glass-border); border-radius:28px; padding:28px 20px 24px; text-align:center; backdrop-filter:blur(20px); box-shadow:0 20px 60px rgba(0,0,0,0.45); position:relative; animation:float 3.6s ease-in-out infinite; transition:transform .3s ease; }
+  .mascot-card .tag{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px; }
+  .levelup-toast{ position:absolute; top:-16px; right:-22px; background:linear-gradient(100deg, rgba(139,92,246,0.92), rgba(34,211,238,0.92)); color:#0A0A0F; font-family:'Sora',sans-serif; font-weight:800; font-size:12px; padding:8px 14px; border-radius:12px; box-shadow:0 10px 26px rgba(139,92,246,0.5); display:flex; align-items:center; gap:6px; animation:toastFloat 3.6s ease-in-out infinite; }
+  @keyframes toastFloat{ 0%,100%{ transform:translateY(0) rotate(-2deg); } 50%{ transform:translateY(-10px) rotate(2deg); } }
+  @media (max-width:900px){ .levelup-toast{ right:6px; } }
+  .hero-xp{ margin-top:16px; }
+  .xp-bar{ height:9px; border-radius:999px; background:rgba(255,255,255,0.06); overflow:hidden; }
+  .xp-fill{ height:100%; width:0%; border-radius:999px; background:linear-gradient(90deg,var(--violet),var(--cyan)); transition:width 1.4s cubic-bezier(.2,.8,.2,1); }
+  .xp-label{ display:flex; justify-content:space-between; font-size:10.5px; color:var(--muted); margin-top:6px; font-family:'JetBrains Mono',monospace; }
+
+  /* ---------- marquee ---------- */
+  .marquee-shell{ border-top:1px solid var(--glass-border); border-bottom:1px solid var(--glass-border); padding:16px 0; overflow:hidden; background:rgba(255,255,255,0.015); }
+  .marquee-track{ display:flex; gap:14px; width:max-content; animation:marquee 32s linear infinite; }
+  .marquee-shell:hover .marquee-track{ animation-play-state:paused; }
+  @keyframes marquee{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+  .marquee-chip{ font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--muted); background:var(--glass); border:1px solid var(--glass-border); border-radius:999px; padding:7px 16px; white-space:nowrap; }
+  .marquee-chip b{ color:var(--violet-soft); font-weight:600; }
+
+  /* ---------- section shell ---------- */
+  section{ padding:84px 0; }
+  .section-head{ max-width:620px; margin-bottom:48px; }
+  .section-eyebrow{ font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color:var(--cyan); text-transform:uppercase; letter-spacing:.08em; margin-bottom:12px; }
+  h2{ font-family:'Sora',sans-serif; font-weight:800; font-size:clamp(25px,3.2vw,36px); letter-spacing:-0.01em; margin-bottom:14px; }
+  .section-head p{ color:var(--muted); font-size:15px; }
+
+  .reveal{ opacity:0; transform:translateY(22px); transition:opacity .7s cubic-bezier(.2,.8,.2,1), transform .7s cubic-bezier(.2,.8,.2,1); }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+  .reveal-l{ opacity:0; transform:translateX(-26px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal-l.in{ opacity:1; transform:translateX(0); }
+  .reveal-r{ opacity:0; transform:translateX(26px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal-r.in{ opacity:1; transform:translateX(0); }
+  .stagger.in > *{ animation:riseIn .6s cubic-bezier(.2,.8,.2,1) both; }
+  .stagger.in > *:nth-child(1){ animation-delay:.05s; }
+  .stagger.in > *:nth-child(2){ animation-delay:.15s; }
+  .stagger.in > *:nth-child(3){ animation-delay:.25s; }
+  .stagger.in > *:nth-child(4){ animation-delay:.35s; }
+  .stagger.in > *:nth-child(5){ animation-delay:.45s; }
+  .stagger.in > *:nth-child(6){ animation-delay:.55s; }
+
+  /* ---------- how it works ---------- */
+  .steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  @media (max-width:820px){ .steps{ grid-template-columns:1fr; } }
+  .step-card{ background:var(--glass); border:1px solid var(--glass-border); border-radius:20px; padding:26px 24px; transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease; will-change:transform; }
+  .step-card:hover{ border-color:rgba(139,92,246,0.4); box-shadow:0 16px 34px rgba(0,0,0,0.35); }
+  .step-icon{ width:44px; height:44px; border-radius:13px; display:flex; align-items:center; justify-content:center; margin-bottom:18px; }
+  .step-card h3{ font-family:'Sora',sans-serif; font-weight:700; font-size:17px; margin-bottom:8px; }
+  .step-card p{ color:var(--muted); font-size:14px; }
+
+  /* ---------- feature rows with mockups ---------- */
+  .feature-row{ display:grid; grid-template-columns:0.85fr 1.15fr; gap:52px; align-items:center; margin-bottom:96px; }
+  .feature-row.rev{ grid-template-columns:1.15fr 0.85fr; }
+  .feature-row.rev .feature-copy{ order:2; }
+  .feature-row.rev .feature-mock{ order:1; }
+  @media (max-width:860px){
+    .feature-row, .feature-row.rev{ grid-template-columns:1fr; }
+    .feature-row.rev .feature-copy, .feature-row.rev .feature-mock{ order:0; }
+  }
+  .feature-copy .kicker{ font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:700; color:var(--violet-soft); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; }
+  .feature-copy h3{ font-family:'Sora',sans-serif; font-weight:800; font-size:22px; margin-bottom:12px; letter-spacing:-0.01em; }
+  .feature-copy p{ color:var(--muted); font-size:14.5px; margin-bottom:16px; }
+  .feature-copy ul{ display:flex; flex-direction:column; gap:9px; }
+  .feature-copy li{ font-size:13.5px; color:var(--text); display:flex; gap:9px; align-items:flex-start; }
+  .feature-copy li svg{ flex-shrink:0; margin-top:2px; }
+
+  .feature-mock{ perspective:1200px; display:flex; justify-content:center; }
+  .device{ width:100%; max-width:320px; background:#0C0C11; border:1px solid var(--glass-border); border-radius:26px; padding:16px; box-shadow:0 30px 70px rgba(0,0,0,0.5); transition:transform .12s ease-out; transform-style:preserve-3d; }
+  .device-inner{ background:var(--glass); border:1px solid var(--glass-border); border-radius:18px; padding:16px; min-height:220px; }
+
+  .d-badge{ font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700; padding:4px 9px; border-radius:999px; display:inline-block; }
+
+  /* mock: trail map */
+  .mock-node{ display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.03); border-radius:12px; padding:9px 11px; margin-bottom:8px; }
+  .mock-node .n{ width:28px; height:28px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-family:'Sora',sans-serif; font-weight:800; font-size:11px; color:#0A0A0F; flex-shrink:0; }
+  .mock-node .t{ font-size:11.5px; font-weight:600; }
+  .mock-node .s{ font-size:9.5px; color:var(--muted); }
+
+  /* mock: quiz */
+  .mock-opt{ display:flex; align-items:center; gap:9px; padding:9px 11px; border-radius:11px; background:rgba(255,255,255,0.03); border:1.5px solid var(--glass-border); font-size:12px; margin-bottom:7px; }
+  .mock-opt.correct{ border-color:var(--mint); }
+  .opt-letter{ width:20px; height:20px; border-radius:6px; background:rgba(139,92,246,0.2); color:var(--violet-soft); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; font-family:'Sora',sans-serif; flex-shrink:0; }
+  .mock-hearts{ display:flex; gap:4px; margin-top:12px; justify-content:flex-end; }
+
+  /* mock: career ladder mini */
+  .mock-rung{ display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:10px; margin-bottom:6px; }
+  .mock-rung.current{ background:rgba(139,92,246,0.14); border:1px solid rgba(139,92,246,0.4); }
+  .mock-rung .rn{ width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-family:'Sora',sans-serif; font-weight:800; font-size:9.5px; color:#0A0A0F; flex-shrink:0; }
+
+  /* mock: dashboard bars */
+  .mock-bar-row{ margin-bottom:12px; }
+  .mock-bar-row .lbl{ display:flex; justify-content:space-between; font-size:11px; margin-bottom:5px; }
+  .mock-bar-track{ height:7px; background:rgba(255,255,255,0.06); border-radius:999px; overflow:hidden; }
+  .mock-bar-fill{ height:100%; border-radius:999px; width:0; transition:width 1.2s cubic-bezier(.2,.8,.2,1); }
+
+  /* mock: puzzle chips */
+  .mock-chip{ display:inline-flex; padding:7px 12px; border-radius:999px; background:rgba(255,255,255,0.04); border:1px solid var(--glass-border); font-size:11.5px; margin:0 6px 6px 0; }
+  .mock-chip.active{ background:rgba(139,92,246,0.22); border-color:var(--violet-soft); }
+
+  /* ---------- career ladder ---------- */
+  .ladder-shell{ background:var(--glass); border:1px solid var(--glass-border); border-radius:26px; padding:36px 30px; backdrop-filter:blur(20px); position:relative; overflow:hidden; }
+  .ladder{ display:flex; flex-direction:column-reverse; gap:10px; position:relative; z-index:1; }
+  .rung{ display:flex; align-items:center; gap:16px; padding:12px 16px; border-radius:14px; background:rgba(255,255,255,0.02); border:1px solid transparent; transition:transform .2s ease, border-color .2s ease, background .2s ease; }
+  .rung:hover{ transform:translateX(6px); border-color:rgba(139,92,246,0.35); background:rgba(255,255,255,0.045); }
+  .rung .node{ width:40px; height:40px; border-radius:11px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:'Sora',sans-serif; font-weight:800; font-size:11px; color:#0A0A0F; background:linear-gradient(145deg,var(--violet),var(--cyan)); }
+  .rung .info b{ display:block; font-family:'Sora',sans-serif; font-weight:700; font-size:14.5px; }
+  .rung .info span{ font-size:11.5px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+  .rung.top .node{ background:linear-gradient(145deg,var(--amber),#B8850A); box-shadow:0 0 20px rgba(251,191,36,0.4); }
+  .rung.current{ border-color:rgba(139,92,246,0.5); background:rgba(139,92,246,0.08); }
+  .you-badge{ font-size:10px; font-weight:800; color:var(--violet-soft); background:rgba(139,92,246,0.18); border-radius:999px; padding:3px 9px; margin-left:auto; }
+  .ladder-glow{ position:absolute; left:-10%; bottom:-20%; width:60%; height:60%; background:radial-gradient(circle, rgba(139,92,246,0.25), transparent 70%); filter:blur(30px); pointer-events:none; animation:pulseGlow 4s ease-in-out infinite; }
+  @keyframes pulseGlow{ 0%,100%{ opacity:0.6; } 50%{ opacity:1; } }
+
+  /* ---------- case studies ---------- */
+  .case-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  @media (max-width:900px){ .case-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:600px){ .case-grid{ grid-template-columns:1fr; } }
+  .case-card{ background:linear-gradient(180deg, rgba(220,38,38,0.07), rgba(255,255,255,0.02)); border:1px solid rgba(220,38,38,0.3); border-radius:18px; padding:20px; transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease; cursor:pointer; }
+  .case-card:hover{ transform:translateY(-4px); box-shadow:0 16px 34px rgba(220,38,38,0.16); border-color:rgba(220,38,38,0.55); }
+  .case-tag{ font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; color:#FCA5A5; background:rgba(220,38,38,0.16); border-radius:999px; padding:4px 10px; display:inline-block; margin-bottom:12px; }
+  .case-card h4{ font-family:'Sora',sans-serif; font-weight:700; font-size:15px; margin-bottom:6px; }
+  .case-card p{ font-size:13px; color:var(--muted); }
+
+  /* live demo card */
+  .demo-card{ background:linear-gradient(180deg, rgba(220,38,38,0.08), rgba(255,255,255,0.03)); border:1.5px solid rgba(220,38,38,0.4); border-radius:20px; padding:24px; margin-top:28px; box-shadow:0 0 40px rgba(220,38,38,0.12); }
+  .demo-q{ font-size:15px; line-height:1.5; margin:14px 0 16px; }
+  .demo-toggle{ display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:var(--cyan); }
+  .demo-more{ max-height:0; overflow:hidden; transition:max-height .4s ease; }
+  .demo-more.open{ max-height:200px; }
+  .demo-more p{ font-size:13px; color:var(--muted); line-height:1.6; padding-top:12px; }
+
+  /* ---------- mechanics section ---------- */
+  .mech-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  @media (max-width:820px){ .mech-grid{ grid-template-columns:1fr; } }
+  .mech-card{ background:var(--glass); border:1px solid var(--glass-border); border-radius:20px; padding:24px; }
+  .mech-card h4{ font-family:'Sora',sans-serif; font-weight:700; font-size:15.5px; margin-bottom:10px; }
+  .mech-card p{ font-size:13px; color:var(--muted); margin-bottom:16px; }
+  .heart-demo{ display:flex; gap:6px; margin-bottom:8px; }
+  .combo-demo{ font-family:'JetBrains Mono',monospace; font-size:26px; font-weight:700; color:var(--amber); }
+  .try-btn{ font-family:'Sora',sans-serif; font-size:12px; font-weight:700; color:var(--text); background:var(--glass); border:1px solid var(--glass-border); border-radius:10px; padding:8px 14px; transition:background .15s ease; }
+  .try-btn:hover{ background:var(--glass-hover); }
+
+  /* ---------- FAQ ---------- */
+  .faq-item{ border-bottom:1px solid var(--glass-border); padding:18px 0; }
+  .faq-q{ display:flex; justify-content:space-between; align-items:center; width:100%; text-align:left; font-family:'Sora',sans-serif; font-weight:700; font-size:15px; cursor:pointer; }
+  .faq-q svg{ transition:transform .25s ease; flex-shrink:0; }
+  .faq-item.open .faq-q svg{ transform:rotate(180deg); }
+  .faq-a{ max-height:0; overflow:hidden; transition:max-height .4s ease; }
+  .faq-item.open .faq-a{ max-height:200px; }
+  .faq-a p{ font-size:13.5px; color:var(--muted); padding-top:12px; line-height:1.6; }
+
+  /* ---------- final cta ---------- */
+  .cta-shell{ text-align:center; position:relative; background:rgba(139,92,246,0.06); border-radius:28px; padding:64px 24px; overflow:hidden; border:1px solid transparent; }
+  .cta-shell::before{ content:""; position:absolute; inset:0; padding:1.5px; border-radius:28px; background:linear-gradient(120deg,var(--violet),var(--cyan),var(--violet)); background-size:220% 100%; animation:shine 4s linear infinite; -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none; }
+  .cta-shell h2{ margin-bottom:12px; }
+  .cta-shell p{ color:var(--muted); margin-bottom:30px; }
+
+  footer{ padding:40px 0 60px; border-top:1px solid var(--glass-border); margin-top:20px; }
+  footer .wrap{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; }
+  footer p{ font-size:12.5px; color:var(--muted); }
+
+  @keyframes riseIn{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:translateY(0); } }
+  @keyframes shine{ 0%{ background-position:0% 50%; } 100%{ background-position:200% 50%; } }
+  @keyframes float{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-8px); } }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+
+  /* ---------- in-progress banner + disabled CTAs ---------- */
+  .build-banner{ position:relative; z-index:60; background:linear-gradient(100deg, rgba(220,38,38,0.22), rgba(251,191,36,0.18));
+    border-bottom:1px solid rgba(251,191,36,0.35); color:#F4F4F6; font-size:12.5px; text-align:center;
+    padding:10px 16px; font-family:'Inter',sans-serif; }
+  .build-banner b{ font-family:'Sora',sans-serif; }
+
+  .btn-primary.disabled, .nav-cta.disabled{
+    cursor:not-allowed; opacity:.55; filter:grayscale(.4);
+    pointer-events:none;
+  }
+  .btn-primary.disabled:hover, .nav-cta.disabled:hover{ transform:none; box-shadow:none; }
+  .soon-tag{ font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700; color:#FBBF24;
+    background:rgba(251,191,36,0.15); border:1px solid rgba(251,191,36,0.35); border-radius:999px;
+    padding:2px 8px; margin-left:8px; vertical-align:middle; }
+</style>
+</head>
+<body>
+
+<div class="build-banner">
+  🚧 <b>sysdesign.gg is in progress</b> — this is a preview of what it'll look like. Not launched, no sign-ups, nothing here is live yet.
+</div>
+
+<div class="ambient">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">
+      <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="#0A0A0F"/></svg></div>
+      sysdesign.gg
+    </div>
+    <div class="links">
+      <a href="#screens">Screens</a>
+      <a href="#ladder">Career ladder</a>
+      <a href="#cases">Case studies</a>
+      <a href="#mechanics">How scoring works</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <span class="nav-cta disabled" aria-disabled="true">Start training<span class="soon-tag">soon</span></span>
+  </div>
+</nav>
+
+<main>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow"><span class="dot" style="background:var(--amber); box-shadow:0 0 8px var(--amber);"></span> SYSTEM DESIGN · IN PROGRESS</div>
+      <h1>The system design trainer engineers <span class="grad">actually finish.</span></h1>
+      <p class="lede">
+        162 questions across three difficulty levels, ten real production case studies, and a career ladder
+        from Associate to Distinguished Engineer — built so review is something you come back to, not something
+        you abandon after day two.
+      </p>
+      <div class="hero-ctas">
+        <span class="btn-primary disabled" aria-disabled="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7L8 5z" fill="#0A0A0F"/></svg> Start training<span class="soon-tag">soon</span></span>
+        <a href="#screens" class="btn-ghost">See the app</a>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><b class="count" data-target="162">0</b><span>Questions</span></div>
+        <div class="stat"><b class="count" data-target="10">0</b><span>Case studies</span></div>
+        <div class="stat"><b class="count" data-target="8">0</b><span>Career tiers</span></div>
+        <div class="stat"><b class="count" data-target="3">0</b><span>Difficulty levels</span></div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="mascot-card" id="heroMascot">
+        <div class="levelup-toast">⬆ Level up! IC6</div>
+        <div class="tag">Your engineer</div>
+        <svg viewBox="0 0 200 222" width="150" height="167" style="margin:0 auto 14px;">
+          <defs>
+            <radialGradient id="skinG" cx="35%" cy="28%" r="78%"><stop offset="0%" stop-color="#9A6A38"/><stop offset="100%" stop-color="#57371C"/></radialGradient>
+            <linearGradient id="hoodieG" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#8B5CF6"/><stop offset="100%" stop-color="#5A32C9"/></linearGradient>
+          </defs>
+          <ellipse cx="100" cy="210" rx="46" ry="7" fill="rgba(0,0,0,0.28)"/>
+          <path d="M60,152 Q100,131 140,152 L148,208 Q100,222 52,208 Z" fill="url(#hoodieG)"/>
+          <text x="100" y="190" text-anchor="middle" font-size="19" font-weight="800" fill="#fff" font-family="Sora">&lt;/&gt;</text>
+          <path d="M69,154 Q100,171 131,154 L124,141 Q100,154 76,141 Z" fill="#5A32C9"/>
+          <circle cx="128" cy="176" r="7" fill="#FBBF24" stroke="#160E08" stroke-width="2"/>
+          <rect x="86" y="118" width="28" height="24" fill="url(#skinG)"/>
+          <circle cx="39" cy="92" r="10" fill="url(#skinG)"/>
+          <circle cx="161" cy="92" r="10" fill="url(#skinG)"/>
+          <circle cx="100" cy="90" r="62" fill="url(#skinG)"/>
+          <path d="M38,82 Q36,30 100,25 Q164,30 162,82 Q160,48 100,44 Q40,48 38,82 Z" fill="#160E08"/>
+          <path d="M38,82 Q33,98 42,111 Q37,90 44,77 Z" fill="#160E08"/>
+          <path d="M162,82 Q167,98 158,111 Q163,90 156,77 Z" fill="#160E08"/>
+          <rect x="57" y="82" width="38" height="26" rx="8" fill="rgba(34,211,238,0.28)" stroke="#160E08" stroke-width="4"/>
+          <rect x="105" y="82" width="38" height="26" rx="8" fill="rgba(34,211,238,0.28)" stroke="#160E08" stroke-width="4"/>
+          <line x1="95" y1="94" x2="105" y2="94" stroke="#160E08" stroke-width="4"/>
+          <circle cx="77" cy="96" r="4" fill="#160E08"/><circle cx="123" cy="96" r="4" fill="#160E08"/>
+          <path d="M69,120 Q100,132 131,120" stroke="#160E08" stroke-width="4" stroke-linecap="round" fill="none"/>
+        </svg>
+        <div class="hero-xp">
+          <div class="xp-bar"><div class="xp-fill" id="heroXpFill"></div></div>
+          <div class="xp-label"><span>IC6 · Lead Engineer</span><span>720 / 800 XP</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="marquee-shell">
+  <div class="marquee-track" id="marqueeTrack">
+    <!-- duplicated via JS for seamless loop -->
+    <span class="marquee-chip">CAP theorem</span>
+    <span class="marquee-chip">Consistent hashing</span>
+    <span class="marquee-chip">Idempotency keys</span>
+    <span class="marquee-chip">Sharding</span>
+    <span class="marquee-chip">Circuit breakers</span>
+    <span class="marquee-chip">Read replicas</span>
+    <span class="marquee-chip">Vector clocks</span>
+    <span class="marquee-chip">Rate limiting</span>
+    <span class="marquee-chip">Event sourcing</span>
+    <span class="marquee-chip">Load balancing</span>
+    <span class="marquee-chip">RAG pipelines</span>
+    <span class="marquee-chip">Saga pattern</span>
+    <span class="marquee-chip">Bloom filters</span>
+    <span class="marquee-chip">Cache invalidation</span>
+  </div>
+</div>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-eyebrow">The loop</div>
+      <h2>Three moves, every stage</h2>
+      <p>No slides, no re-reading the same notes. Just a trail of stages you actually finish.</p>
+    </div>
+    <div class="steps stagger reveal">
+      <div class="step-card">
+        <div class="step-icon" style="background:rgba(139,92,246,0.18);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 12h16M4 6h16M4 18h16" stroke="#A78BFA" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <h3>Pick your level</h3>
+        <p>Junior, Mid, Senior, or Random — a fresh mix of questions is drawn every session, never the same run twice.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-icon" style="background:rgba(251,113,133,0.18);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.5-9.5-9C.6 8 2 4 6 4c2 0 3.5 1.2 4 3 .5-1.8 2-3 4-3 4 0 5.4 4 3.5 8-2.5 4.5-9.5 9-9.5 9z" fill="#FB7185"/></svg></div>
+        <h3>Answer, keep your hearts</h3>
+        <p>Multiple choice, fill-in-the-blank, sentence building, open-ended — wrong answers cost half a heart or a full one, streaks boost XP.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-icon" style="background:rgba(220,38,38,0.18);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="3" stroke="#FCA5A5" stroke-width="2"/><path d="M8 9h8M8 13h5" stroke="#FCA5A5" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <h3>Close with a case study</h3>
+        <p>Every stage ends with a question built from how a real system was actually designed — Stripe, Uber, S3, and more.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-eyebrow">Inside the app</div>
+      <h2>Every screen, built for actual review</h2>
+      <p>A quick look at what you're actually working with — not a mockup of an idea, the real interface.</p>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-copy reveal-l">
+        <div class="kicker">Trail map</div>
+        <h3>A path, not a menu</h3>
+        <p>Stages unlock in order, so you always know what's next and what's already solid. Completed stages stay green; the current one glows.</p>
+        <ul>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#34D399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> 10 stages covering infra, data, distributed systems, and messaging</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#34D399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Locked stages show exactly what unlocks them</li>
+        </ul>
+      </div>
+      <div class="feature-mock reveal-r">
+        <div class="device tilt">
+          <div class="device-inner">
+            <div class="mock-node"><div class="n" style="background:linear-gradient(145deg,#34D399,#0F8F63);">✓</div><div><div class="t">Infra Fundamentals I</div><div class="s">16 questions in pool</div></div></div>
+            <div class="mock-node"><div class="n" style="background:linear-gradient(145deg,#34D399,#0F8F63);">✓</div><div><div class="t">Infra Fundamentals II</div><div class="s">17 questions in pool</div></div></div>
+            <div class="mock-node" style="border:1px solid rgba(139,92,246,0.5); box-shadow:0 0 18px rgba(139,92,246,0.25);"><div class="n" style="background:rgba(139,92,246,0.9); color:#0A0A0F;">3</div><div><div class="t">Data &amp; Storage I</div><div class="s">16 questions in pool</div></div></div>
+            <div class="mock-node" style="opacity:0.4;"><div class="n" style="background:rgba(255,255,255,0.08);">🔒</div><div><div class="t">Data &amp; Storage II</div><div class="s">Locked</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="feature-row rev">
+      <div class="feature-copy reveal-r">
+        <div class="kicker">Quiz screen</div>
+        <h3>Four question formats, one flow</h3>
+        <p>Multiple choice, fill-in-the-blank, sentence building, and open-ended answers with a self-graded key-points panel — variety that keeps recall active instead of pattern-matching.</p>
+        <ul>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#34D399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Options are re-shuffled and re-worded in length so nothing gives itself away</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#34D399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Wrong answers cost a full heart; a partial answer costs half</li>
+        </ul>
+      </div>
+      <div class="feature-mock reveal-l">
+        <div class="device tilt">
+          <div class="device-inner">
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+              <span class="d-badge" style="background:rgba(139,92,246,0.18); color:#A78BFA;">MULTIPLE CHOICE · 4/10</span>
+              <span class="d-badge" style="background:rgba(251,191,36,0.18); color:#FBBF24;">SENIOR</span>
+            </div>
+            <p style="font-size:13px; margin-bottom:14px; line-height:1.4;">Why does token bucket allow short legitimate traffic bursts that sliding window would penalize?</p>
+            <div class="mock-opt correct"><span class="opt-letter">A</span> Accumulates tokens during idle periods, spendable all at once</div>
+            <div class="mock-opt"><span class="opt-letter">B</span> Always superior in every scenario, no exceptions</div>
+            <div class="mock-opt"><span class="opt-letter">C</span> Can't enforce any long-term average rate</div>
+            <div class="mock-hearts">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="#FB7185"><path d="M12 21s-7-4.5-9.5-9C.6 8 2 4 6 4c2 0 3.5 1.2 4 3 .5-1.8 2-3 4-3 4 0 5.4 4 3.5 8-2.5 4.5-9.5 9-9.5 9z"/></svg>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="#FB7185"><path d="M12 21s-7-4.5-9.5-9C.6 8 2 4 6 4c2 0 3.5 1.2 4 3 .5-1.8 2-3 4-3 4 0 5.4 4 3.5 8-2.5 4.5-9.5 9-9.5 9z"/></svg>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2"><path d="M12 21s-7-4.5-9.5-9C.6 8 2 4 6 4c2 0 3.5 1.2 4 3 .5-1.8 2-3 4-3 4 0 5.4 4 3.5 8-2.5 4.5-9.5 9-9.5 9z"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-copy reveal-l">
+        <div class="kicker">Puzzle formats</div>
+        <h3>Recall, not recognition</h3>
+        <p>Fill-in-the-blank and sentence-building questions force you to produce the term, not just spot it in a list of four — a closer match to what an interview actually demands.</p>
+        <ul>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#34D399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Diagrams accompany key questions — load balancers, CAP, replication, and more</li>
+        </ul>
+      </div>
+      <div class="feature-mock reveal-r">
+        <div class="device tilt">
+          <div class="device-inner">
+            <div class="d-badge" style="background:rgba(139,92,246,0.18); color:#A78BFA; margin-bottom:14px;">BUILD THE SENTENCE</div>
+            <div style="min-height:44px; border:1.5px dashed var(--glass-border); border-radius:12px; padding:10px; margin-bottom:12px; display:flex; flex-wrap:wrap; gap:6px;">
+              <span class="mock-chip active">Replicas</span><span class="mock-chip active">converge</span><span class="mock-chip active">to</span>
+            </div>
+            <div>
+              <span class="mock-chip">the</span><span class="mock-chip">same</span><span class="mock-chip">state</span><span class="mock-chip">over</span><span class="mock-chip">time</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="feature-row rev">
+      <div class="feature-copy reveal-r">
+        <div class="kicker">Career ladder</div>
+        <h3>XP that maps to a real title</h3>
+        <p>Every 100 XP moves you up a tier — the same IC3-to-IC10 ladder engineering orgs actually use, so progress means something outside the app too.</p>
+        <ul>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#34D399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> A level-up moment fires the moment you cross a threshold</li>
+        </ul>
+      </div>
+      <div class="feature-mock reveal-l">
+        <div class="device tilt">
+          <div class="device-inner">
+            <div class="mock-rung"><div class="rn" style="background:linear-gradient(145deg,#FBBF24,#B8850A);">IC10</div><div style="font-size:11.5px; font-weight:600;">Distinguished Engineer</div></div>
+            <div class="mock-rung"><div class="rn" style="background:linear-gradient(145deg,#8B5CF6,#22D3EE);">IC7</div><div style="font-size:11.5px; font-weight:600;">Staff Engineer</div></div>
+            <div class="mock-rung current"><div class="rn" style="background:linear-gradient(145deg,#8B5CF6,#22D3EE);">IC6</div><div><div style="font-size:11.5px; font-weight:700;">Lead Engineer</div></div><span class="you-badge">YOU</span></div>
+            <div class="mock-rung" style="opacity:0.5;"><div class="rn" style="background:rgba(255,255,255,0.08);">IC5</div><div style="font-size:11.5px; font-weight:600;">Senior Engineer</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="feature-row" style="margin-bottom:0;">
+      <div class="feature-copy reveal-l">
+        <div class="kicker">Progress dashboard</div>
+        <h3>See exactly where you're weak</h3>
+        <p>Accuracy broken down by stage and by difficulty level, sorted worst-first, plus a one-tap review session built only from questions you've missed.</p>
+        <ul>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#34D399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Review sessions shrink automatically as you get questions right again</li>
+        </ul>
+      </div>
+      <div class="feature-mock reveal-r">
+        <div class="device tilt">
+          <div class="device-inner">
+            <div class="mock-bar-row"><div class="lbl"><span>Distributed Systems II</span><span style="color:#FB7185;">54%</span></div><div class="mock-bar-track"><div class="mock-bar-fill" data-width="54" style="background:#FB7185;"></div></div></div>
+            <div class="mock-bar-row"><div class="lbl"><span>Messaging II</span><span style="color:#FBBF24;">71%</span></div><div class="mock-bar-track"><div class="mock-bar-fill" data-width="71" style="background:#FBBF24;"></div></div></div>
+            <div class="mock-bar-row"><div class="lbl"><span>Infra Fundamentals I</span><span style="color:#34D399;">92%</span></div><div class="mock-bar-track"><div class="mock-bar-fill" data-width="92" style="background:#34D399;"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="ladder">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-eyebrow">Progression</div>
+      <h2>Climb from Associate to Distinguished</h2>
+      <p>Every 100 XP moves you up a real engineering career tier.</p>
+    </div>
+    <div class="ladder-shell reveal">
+      <div class="ladder-glow"></div>
+      <div class="ladder">
+        <div class="rung top"><div class="node">IC10</div><div class="info"><b>Distinguished Engineer</b><span>800 XP</span></div></div>
+        <div class="rung"><div class="node">IC9</div><div class="info"><b>Principal Engineer</b><span>700 XP</span></div></div>
+        <div class="rung"><div class="node">IC8</div><div class="info"><b>Senior Staff Engineer</b><span>600 XP</span></div></div>
+        <div class="rung"><div class="node">IC7</div><div class="info"><b>Staff Engineer</b><span>500 XP</span></div></div>
+        <div class="rung current"><div class="node">IC6</div><div class="info"><b>Lead Engineer</b><span>400 XP</span></div><span class="you-badge">YOU</span></div>
+        <div class="rung"><div class="node">IC5</div><div class="info"><b>Senior Engineer</b><span>300 XP</span></div></div>
+        <div class="rung"><div class="node">IC4</div><div class="info"><b>Engineer</b><span>200 XP</span></div></div>
+        <div class="rung"><div class="node">IC3</div><div class="info"><b>Associate Engineer</b><span>100 XP</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="cases">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-eyebrow">End of every stage</div>
+      <h2>Case studies from real production systems</h2>
+      <p>Not textbook trivia — every closing question comes from how an actual system was designed and shipped.</p>
+    </div>
+    <div class="case-grid stagger reveal">
+      <div class="case-card" data-demo="Stripe" data-q="Why does Stripe require a new idempotency key if the request payload changes, even if it looks like a retry?" data-a="Reusing a key with different data would indicate a different operation, not a retry. Stripe's server stores the result tied to each key and returns it unchanged on a repeat — but only for the exact same payload. That's what makes retries safe without risking a second charge on a genuinely different request."><span class="case-tag">CASE STUDY</span><h4>Stripe</h4><p>How idempotency keys stop double payments.</p></div>
+      <div class="case-card" data-demo="Uber" data-q="Why does Uber's H3 index use hexagonal cells instead of the more obvious square grid?" data-a="In a hexagonal grid, every neighboring cell of a central cell sits at the same distance from it. In a square grid, diagonal neighbors are farther away than orthogonal ones, distorting proximity math — hexagons keep driver-matching accurate at any zoom level."><span class="case-tag">CASE STUDY</span><h4>Uber</h4><p>Hexagonal geospatial indexing to find nearby drivers.</p></div>
+      <div class="case-card" data-demo="Amazon S3" data-q="Why does S3 need checksums on top of data that already has erasure coding for redundancy?" data-a="Erasure coding reconstructs lost data, but doesn't by itself detect which piece is silently corrupted. The checksum identifies exactly where the damage is before reconstruction ever triggers — the two techniques solve different, complementary problems."><span class="case-tag">CASE STUDY</span><h4>Amazon S3</h4><p>Erasure coding and checksums behind eleven nines of durability.</p></div>
+      <div class="case-card" data-demo="YouTube" data-q="Why does Vitess put a proxy layer in front of sharded MySQL instead of having each service talk to shards directly?" data-a="Centralizing routing, pooling, and query rewriting in a shared layer means no application has to reimplement that logic — and the shard topology can change underneath without rewriting a single line of client code."><span class="case-tag">CASE STUDY</span><h4>YouTube</h4><p>Vitess, sharding MySQL for 2.49 billion users.</p></div>
+      <div class="case-card" data-demo="Meta" data-q="Why does Meta's Polaris system separate 'detecting an inconsistency' from 'finding the root cause' into two different systems?" data-a="Detection needs to run constantly and cheaply to catch problems early. Root-cause tracing is far more expensive, so it only kicks in once an inconsistency has already been confirmed — running it continuously would be wasteful."><span class="case-tag">CASE STUDY</span><h4>Meta</h4><p>Polaris, catching cache inconsistency before it spreads.</p></div>
+      <div class="case-card" data-demo="+ 5 more" data-q="Figma's Postgres scale-up, DNS resolution internals, Tinder's swipe-to-match pipeline, AWS Lambda's cold-start optimizations, and one more waiting in the app." data-a="Every stage in the trail ends with a different real-world case — open the app to see the rest."><span class="case-tag">CASE STUDY</span><h4>+ 5 more</h4><p>Figma, DNS, Tinder, AWS Lambda, and one per stage in between.</p></div>
+    </div>
+
+    <div class="demo-card reveal" id="demoCard">
+      <span class="case-tag">CASE STUDY · TRY IT</span>
+      <p class="demo-q" id="demoQ">Why does Stripe require a new idempotency key if the request payload changes, even if it looks like a retry?</p>
+      <button class="demo-toggle" id="demoToggleBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        Reveal the explanation
+      </button>
+      <div class="demo-more" id="demoMore">
+        <p id="demoA">Reusing a key with different data would indicate a different operation, not a retry. Stripe's server stores the result tied to each key and returns it unchanged on a repeat — but only for the exact same payload. That's what makes retries safe without risking a second charge on a genuinely different request.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="mechanics">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-eyebrow">Scoring</div>
+      <h2>Mechanics that reward how you actually answered</h2>
+      <p>Grading with more nuance than right/wrong — because that's closer to how an interviewer actually listens.</p>
+    </div>
+    <div class="mech-grid stagger reveal">
+      <div class="mech-card">
+        <h4>Half-life hearts</h4>
+        <p>3 hearts, 6 half-units. A wrong answer costs a full heart. A partial answer on an open question costs half.</p>
+        <div class="heart-demo" id="heartDemo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#FB7185"><path d="M12 21s-7-4.5-9.5-9C.6 8 2 4 6 4c2 0 3.5 1.2 4 3 .5-1.8 2-3 4-3 4 0 5.4 4 3.5 8-2.5 4.5-9.5 9-9.5 9z"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#FB7185"><path d="M12 21s-7-4.5-9.5-9C.6 8 2 4 6 4c2 0 3.5 1.2 4 3 .5-1.8 2-3 4-3 4 0 5.4 4 3.5 8-2.5 4.5-9.5 9-9.5 9z"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#FB7185"><path d="M12 21s-7-4.5-9.5-9C.6 8 2 4 6 4c2 0 3.5 1.2 4 3 .5-1.8 2-3 4-3 4 0 5.4 4 3.5 8-2.5 4.5-9.5 9-9.5 9z"/></svg>
+        </div>
+        <button class="try-btn" onclick="loseHalfHeart()">Simulate a partial answer</button>
+      </div>
+      <div class="mech-card">
+        <h4>Combo-scaled XP</h4>
+        <p>Chain correct answers and every one after the second is worth more than the last — a real incentive to stay careful, not just fast.</p>
+        <div class="combo-demo" id="comboDemo">×1</div>
+        <button class="try-btn" onclick="bumpCombo()">Simulate a streak</button>
+      </div>
+      <div class="mech-card">
+        <h4>Quick review mode</h4>
+        <p>Every question you get wrong is logged per stage. One tap builds a session from just those — with the study content shown up front, not hidden behind another wrong answer.</p>
+        <div class="d-badge" style="background:rgba(251,191,36,0.18); color:#FBBF24; margin-top:4px;">4 questions ready to review</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap" style="max-width:760px;">
+    <div class="section-head reveal">
+      <div class="section-eyebrow">Before you start</div>
+      <h2>Questions engineers actually ask</h2>
+    </div>
+    <div class="reveal">
+      <div class="faq-item">
+        <button class="faq-q">Is my progress saved? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="faq-a"><p>Yes — XP, career tier, completed stages, and per-question accuracy are all saved automatically as you play, no account required.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Is the content technically accurate? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="faq-a"><p>Every question is written to be interview-defensible, and every case study is sourced from a real, documented production system. If something reads wrong, a "Report issue" button sits right on the question.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Can I use a level I've already finished? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="faq-a"><p>Switching difficulty never wipes your XP or completed stages — it only changes which questions get drawn going forward.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Does it repeat the same questions? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="faq-a"><p>Each session draws a fresh, shuffled set from the level's question pool — including re-ordered answer choices — so pattern-matching the position of the right answer doesn't work.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="cta">
+  <div class="wrap">
+    <div class="cta-shell reveal">
+      <h2>Your next stage is waiting.</h2>
+      <p>Free, no account, progress saved as you go.</p>
+      <span class="btn-primary disabled" aria-disabled="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7L8 5z" fill="#0A0A0F"/></svg> Start training<span class="soon-tag">soon</span></span>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="brand" style="font-size:14px;">
+      <div class="brand-mark" style="width:24px;height:24px;"><svg viewBox="0 0 24 24" fill="none" width="13" height="13"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="#0A0A0F"/></svg></div>
+      sysdesign.gg
+    </div>
+    <p>Built for engineers who'd rather level up than burn out studying.</p>
+  </div>
+</footer>
+
+<script>
+  // scroll reveal
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal, .reveal-l, .reveal-r, .stagger').forEach(el => io.observe(el));
+
+  // count-up stats
+  function animateCount(el){
+    const target = parseInt(el.dataset.target, 10);
+    const dur = 1400;
+    const start = performance.now();
+    function tick(now){
+      const p = Math.min((now - start) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(eased * target);
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  const countIo = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting){ animateCount(e.target); countIo.unobserve(e.target); }
+    });
+  }, { threshold: 0.4 });
+  document.querySelectorAll('.count').forEach(el => countIo.observe(el));
+
+  // hero xp bar fill + mascot subtle tilt on mousemove
+  const heroIo = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting){ document.getElementById('heroXpFill').style.width = '90%'; heroIo.disconnect(); }
+    });
+  }, { threshold: 0.3 });
+  heroIo.observe(document.getElementById('heroMascot'));
+
+  const heroMascot = document.getElementById('heroMascot');
+  document.querySelector('.hero-visual').addEventListener('mousemove', (e) => {
+    const r = heroMascot.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    heroMascot.style.transform = `rotateY(${px * 10}deg) rotateX(${-py * 10}deg)`;
+  });
+  document.querySelector('.hero-visual').addEventListener('mouseleave', () => {
+    heroMascot.style.transform = '';
+  });
+
+  // marquee: duplicate content for seamless loop
+  const track = document.getElementById('marqueeTrack');
+  track.innerHTML += track.innerHTML;
+
+  // device tilt on hover
+  document.querySelectorAll('.tilt').forEach(el => {
+    el.addEventListener('mousemove', (e) => {
+      const r = el.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      el.style.transform = `rotateY(${px * 8}deg) rotateX(${-py * 8}deg) scale(1.02)`;
+    });
+    el.addEventListener('mouseleave', () => { el.style.transform = ''; });
+  });
+
+  // dashboard bar fill on reveal
+  const barIo = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting){
+        e.target.querySelectorAll('.mock-bar-fill').forEach(b => { b.style.width = b.dataset.width + '%'; });
+        barIo.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.4 });
+  document.querySelectorAll('.feature-mock').forEach(el => barIo.observe(el));
+
+  // case card -> live demo swap
+  const demoQ = document.getElementById('demoQ');
+  const demoA = document.getElementById('demoA');
+  const demoMore = document.getElementById('demoMore');
+  const demoToggleBtn = document.getElementById('demoToggleBtn');
+  document.querySelectorAll('.case-card').forEach(card => {
+    card.addEventListener('click', () => {
+      demoQ.textContent = card.dataset.q;
+      demoA.textContent = card.dataset.a;
+      demoMore.classList.remove('open');
+      document.getElementById('demoCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  });
+  demoToggleBtn.addEventListener('click', () => { demoMore.classList.toggle('open'); });
+
+  // FAQ accordion
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.querySelector('.faq-q').addEventListener('click', () => {
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
+
+  // mechanics mini-demos
+  let hearts = 3; // in half-units out of 6, displayed as 3 icons
+  function loseHalfHeart(){
+    const icons = document.querySelectorAll('#heartDemo svg');
+    hearts = Math.max(hearts - 0.5, 0);
+    icons.forEach((icon, i) => {
+      const remaining = hearts - i;
+      if (remaining >= 1) icon.setAttribute('fill', '#FB7185');
+      else if (remaining > 0){ icon.setAttribute('fill', 'url(#halfGrad)'); }
+      else icon.setAttribute('fill', 'rgba(255,255,255,0.15)');
+    });
+    if (hearts <= 0) setTimeout(() => { hearts = 3; icons.forEach(i => i.setAttribute('fill', '#FB7185')); }, 700);
+  }
+  let combo = 1;
+  function bumpCombo(){
+    combo = combo >= 6 ? 1 : combo + 1;
+    const el = document.getElementById('comboDemo');
+    el.textContent = '×' + combo;
+    el.style.transform = 'scale(1.25)';
+    el.style.color = combo >= 4 ? '#FB7185' : '#FBBF24';
+    setTimeout(() => { el.style.transform = 'scale(1)'; }, 200);
+  }
+  document.getElementById('comboDemo').style.transition = 'transform .2s ease';
+</script>
+
+</body>
+</html>
