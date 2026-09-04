@@ -10,14 +10,50 @@
 <meta property="og:description" content="Backend engineer in São Paulo who maintains Dracula for Adminer and builds small terminal and backend tools on the side.">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/57931045?v=4">
 <meta name="twitter:card" content="summary">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%9B%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Douglas de Castro Damasio",
+  "jobTitle": "Backend Software Engineer",
+  "url": "https://douglasdamasio.github.io",
+  "sameAs": [
+    "https://github.com/douglasdamasio",
+    "https://linkedin.com/in/douglasdamasio"
+  ]
+}
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23282a36'/%3E%3Ctext x='50' y='68' font-family='monospace' font-size='58' font-weight='700' fill='%23ff79c6' text-anchor='middle'%3ED%3C/text%3E%3C/svg%3E">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap');
   :root{
-    --bg:#21222c; --panel:#282a36; --line:#3a3c4e; --fg:#f8f8f2; --comment:#8892b0;
+    --bg:#21222c; --panel:#282a36; --line:#3a3c4e; --fg:#f8f8f2; --comment:#9aa4c4;
     --purple:#bd93f9; --pink:#ff79c6; --green:#50fa7b; --cyan:#8be9fd; --orange:#ffb86c;
   }
   *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+
+  /* scroll progress bar */
+  #progress{position:fixed; top:0; left:0; height:3px; width:0%; background:var(--pink);
+    z-index:100; transition:width .1s linear;}
+
+  /* side nav — desktop only, hidden on narrow screens to avoid mobile clutter */
+  #side-nav{position:fixed; left:26px; top:50%; transform:translateY(-50%); z-index:90;
+    display:none; flex-direction:column; gap:16px;}
+  #side-nav a{width:9px; height:9px; border-radius:50%; background:var(--line);
+    border:none; display:block; position:relative;}
+  #side-nav a:hover, #side-nav a.active{background:var(--green);}
+  #side-nav a .label{position:absolute; left:18px; top:50%; transform:translateY(-50%);
+    white-space:nowrap; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--comment);
+    opacity:0; transition:opacity .15s ease; pointer-events:none;}
+  #side-nav a:hover .label{opacity:1;}
+  @media (min-width:1160px){ #side-nav{display:flex;} }
+
+  /* scroll-reveal */
+  .reveal{opacity:0; transform:translateY(16px); transition:opacity .6s ease, transform .6s ease;}
+  .reveal.visible{opacity:1; transform:none;}
   body{margin:0; background:var(--bg); color:var(--fg); font-family:'Inter',sans-serif;
     background-image:radial-gradient(var(--line) 1px, transparent 1px);
     background-size:26px 26px;}
@@ -33,6 +69,9 @@
   h1 .accent{color:var(--pink);}
   .sub{color:var(--comment); font-size:16px; max-width:440px; line-height:1.7; margin:0;}
   .sub b{color:#d3d6e0; font-weight:500;}
+  .hero-cta{display:inline-block; margin-top:20px; font-family:'JetBrains Mono',monospace;
+    font-size:12.5px; color:var(--cyan); text-decoration:none; border-bottom:1px dashed var(--cyan);}
+  .hero-cta:hover{color:var(--green); border-color:var(--green);}
   @media (max-width:480px){ h1{font-size:25px;} }
 
   /* shipping list: terminal-style, no layout tricks, can't break on any screen */
@@ -47,8 +86,11 @@
     border-bottom:1px solid rgba(255,255,255,.04);}
   .term-row:last-child{border-bottom:none;}
   .term-row .name{color:var(--fg);}
-  .term-row.core .name{color:var(--purple);}
+  .term-row.core .name{color:var(--cyan);}
   .term-row .tag{color:var(--comment); text-align:right; white-space:nowrap;}
+  .term-now{color:#d3d6e0; font-size:11.5px; line-height:1.7; margin-top:6px;}
+  .term-now a{color:var(--yellow); text-decoration:none; border-bottom:1px dashed var(--yellow);}
+  .term-now a:hover{color:var(--green); border-color:var(--green);}
 
   /* sections */
   section{margin-bottom:90px;}
@@ -60,29 +102,55 @@
   .about p{color:#d3d6e0; font-size:15.5px; line-height:1.75; max-width:640px; margin:0 0 16px;}
   .about p:last-child{margin-bottom:0;}
 
+  .contrib{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px;
+    margin-bottom:26px; overflow-x:auto;}
+  .contrib img{display:block; min-width:640px; width:100%;}
+
   .resume p{color:#d3d6e0; font-size:15.5px; line-height:1.75; max-width:640px; margin:0 0 18px;}
-  .resume-link{display:inline-flex; align-items:center; gap:8px; margin-top:6px; padding:11px 18px;
+  .resume-actions{display:flex; gap:12px; flex-wrap:wrap; margin-top:6px;}
+  .resume-link{display:inline-flex; align-items:center; gap:8px; padding:11px 18px;
     background:var(--panel); border:1px solid var(--line); border-radius:6px; color:var(--fg);
     text-decoration:none; font-size:14px; font-family:'JetBrains Mono',monospace;}
   .resume-link:hover{border-color:var(--orange); color:var(--orange);}
+  .resume-link.primary{background:var(--yellow); border-color:var(--yellow); color:var(--bg); font-weight:600;}
+  .resume-link.primary:hover{background:var(--green); border-color:var(--green); color:var(--bg);}
 
-  /* projects: full width elaborated entries */
+  /* projects: collapsible accordion entries */
   .proj{background:var(--panel); border:1px solid var(--line); border-radius:10px;
-    padding:34px 34px 30px; margin-bottom:26px;}
-  .proj.featured{border-color:var(--purple);}
-  .proj-top{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;
-    flex-wrap:wrap; gap:10px;}
+    padding:6px 34px; margin-bottom:16px; transition:border-color .2s ease;}
+  .proj:hover{border-color:var(--comment);}
+  .proj.featured{border-color:var(--cyan);}
+  .proj.featured:hover{border-color:var(--cyan);}
+  .proj-top{display:flex; justify-content:space-between; align-items:center; gap:10px;
+    width:100%; background:none; border:none; cursor:pointer; padding:22px 0; margin:0;
+    text-align:left; font:inherit; color:inherit;}
   .proj-top h3{margin:0; font-size:22px; font-family:'Space Grotesk',sans-serif;}
-  .proj.featured h3{color:var(--purple);}
+  .proj.featured h3{color:var(--cyan);}
+  .proj-top-right{display:flex; align-items:center; gap:14px; flex-shrink:0;}
+  .chevron{color:var(--comment); font-size:13px; transition:transform .25s ease; display:inline-block;}
+  .proj.expanded .chevron{transform:rotate(180deg);}
+  .proj-body{display:grid; grid-template-rows:0fr; opacity:0; transition:grid-template-rows .3s ease, opacity .25s ease;}
+  .proj-body > *{overflow:hidden; min-height:0;}
+  .proj.expanded .proj-body{grid-template-rows:1fr; opacity:1; padding-bottom:28px;}
   .badge{font-size:10.5px; font-family:'JetBrains Mono',monospace; padding:3px 9px; border-radius:10px;
     white-space:nowrap;}
   .badge.wip{background:rgba(255,184,108,.15); color:var(--orange);}
   .badge.stable{background:rgba(80,250,123,.15); color:var(--green);}
-  .badge.core{background:rgba(189,147,249,.15); color:var(--purple);}
+  .badge.core{background:rgba(139,233,253,.15); color:var(--cyan);}
   .proj p{color:#d3d6e0; font-size:14.5px; line-height:1.75; margin:0 0 14px; max-width:640px;}
   .proj .stack{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--comment); margin-bottom:18px;}
   .proj a.repo{color:var(--cyan); font-size:13px; text-decoration:none; font-family:'JetBrains Mono',monospace;}
   .proj a.repo:hover{color:var(--pink);}
+
+  .cmd{display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--bg); border:1px solid var(--line); border-radius:6px;
+    padding:10px 10px 10px 16px; margin:0 0 18px; max-width:520px;}
+  .cmd code{font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--green);
+    overflow-x:auto; white-space:nowrap;}
+  .cmd button{flex-shrink:0; background:var(--panel); border:1px solid var(--line); color:var(--comment);
+    font-family:'JetBrains Mono',monospace; font-size:11px; padding:6px 12px; border-radius:4px;
+    cursor:pointer;}
+  .cmd button:hover{border-color:var(--green); color:var(--green);}
 
   .shot{border:1px dashed var(--line); border-radius:8px; padding:34px; text-align:center;
     color:var(--comment); font-size:12.5px; font-family:'JetBrains Mono',monospace; margin:18px 0;
@@ -100,12 +168,19 @@
   footer{border-top:1px solid var(--line); padding-top:36px; margin-top:20px;}
   footer .f-title{font-size:18px; font-family:'Space Grotesk',sans-serif; margin-bottom:18px;}
   footer .f-links{display:flex; gap:26px; flex-wrap:wrap; font-size:14px; margin-bottom:24px;}
-  footer .f-links a{color:var(--purple); text-decoration:none;}
+  footer .f-links a{color:var(--cyan); text-decoration:none;}
   footer .f-links a:hover{color:var(--pink);}
   footer .f-meta{color:var(--comment); font-size:12.5px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;}
 </style>
 </head>
 <body>
+<div id="progress"></div>
+<nav id="side-nav">
+  <a href="#projects" data-target="projects"><span class="label">Projects</span></a>
+  <a href="#family" data-target="family"><span class="label">Family</span></a>
+  <a href="#resume" data-target="resume"><span class="label">About</span></a>
+  <a href="#contact" data-target="contact"><span class="label">Contact</span></a>
+</nav>
 <div class="wrap">
 
   <div class="hero">
@@ -115,6 +190,7 @@
       <p class="sub">Most days I write <b>Python</b> and <b>Clojure</b> for work. On the side
       I build small terminal and backend tools, and help keep <b>Dracula</b> going. This
       page is about that side of things.</p>
+      <a class="hero-cta" href="#resume">Here for the hiring version? Jump to my résumé ↓</a>
     </div>
     <div class="diagram">
       <div class="term">
@@ -137,6 +213,9 @@
             <span class="name">home-gallery</span>
             <span class="tag">TypeScript · personal</span>
           </div>
+          <div class="term-prompt" style="margin-top:16px;">$ cat now.txt</div>
+          <div class="term-now">Building <a href="https://sysdesign.gg" target="_blank">sysdesign.gg</a> —
+          gamifying system design interview prep so I stop re-reading the same notes.</div>
         </div>
       </div>
     </div>
@@ -153,105 +232,131 @@
     going since 2020.</p>
   </section>
 
-  <section>
+  <section id="projects">
     <div class="sec-head"><h2 class="disp">Projects</h2><span class="idx">github.com/douglasdamasio</span></div>
+    <div class="contrib">
+      <img src="https://ghchart.rshah.org/50fa7b/douglasdamasio" alt="Douglas's GitHub contribution graph" loading="lazy">
+    </div>
 
-    <div class="proj featured">
-      <div class="proj-top">
+    <div class="proj featured reveal expanded">
+      <button class="proj-top" type="button">
         <h3>Dracula for Adminer</h3>
-        <span class="badge core">maintainer since 2020</span>
-      </div>
-      <p>Adminer is a popular single-file database manager, and its default look is
-      rough. I put together a dark theme for it using the Dracula palette and opened
-      it as a proposal on the main Dracula repo — it got adopted and became part of
-      the official Dracula organization. It's now at <span id="star-count">10 stars and
-      4 forks</span>, generated from the shared
-      <span class="mono" style="color:var(--comment);">dracula/template</span>
-      so it stays consistent with every other Dracula theme out there. Dracula itself
-      ships in 200+ apps and has millions of installs across editors and terminals —
-      and this particular theme even made it into Debian's official Adminer package.</p>
-      <div class="shot" style="padding:0; border-style:solid;">
-        <img src="https://raw.githubusercontent.com/dracula/adminer/master/screenshot.png" alt="Dracula theme applied to Adminer">
-      </div>
-      <div class="stack">CSS · Dracula org · draculatheme.com/adminer</div>
-      <a class="repo" href="https://github.com/dracula/adminer" target="_blank">github.com/dracula/adminer →</a>
-    </div>
-
-    <div class="proj">
-      <div class="proj-top">
-        <h3>nba-terminal</h3>
-        <span class="badge wip">active</span>
-      </div>
-      <p>I follow the NBA closely and got tired of tabbing over to a browser just to
-      check a score. nba-terminal is a TUI with a live dashboard, East/West standings,
-      league leaders, and a full box score view with per-player stats — all keyboard
-      driven, with a favorite team, light/dark/high-contrast themes, and an offline
-      cache so it still works if the network drops. There's also a CLI mode for
-      scripting: export today's games, standings, or a box score straight to JSON
-      or CSV. I packaged it as a Homebrew tap, so installing it is just
-      <span class="mono" style="color:var(--comment);">brew install</span>.</p>
-      <div class="shot" style="padding:0; border-style:solid;">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px;">
-          <img src="img/nba-dashboard.jpg" alt="nba-terminal dashboard view">
-          <img src="img/nba-boxscore.jpg" alt="nba-terminal box score view">
-          <img src="img/nba-standings.jpg" alt="nba-terminal standings view">
-          <img src="img/nba-team-page.jpg" alt="nba-terminal team page view">
+        <div class="proj-top-right">
+          <span class="badge core">maintainer since 2020</span>
+          <span class="chevron">▾</span>
         </div>
-      </div>
-      <div class="stack">Python · typer · Homebrew tap · EN/PT</div>
-      <a class="repo" href="https://github.com/douglasdamasio/nba-terminal" target="_blank">nba-terminal →</a>
+      </button>
+      <div class="proj-body"><div>
+        <p>Adminer is a popular single-file database manager, and its default look is
+        rough. I put together a dark theme for it using the Dracula palette and opened
+        it as a proposal on the main Dracula repo — it got adopted and became part of
+        the official Dracula organization. It's now at <span id="star-count">10 stars and
+        4 forks</span>, generated from the shared
+        <span class="mono" style="color:var(--comment);">dracula/template</span>
+        so it stays consistent with every other Dracula theme out there. Dracula itself
+        ships in 200+ apps and has millions of installs across editors and terminals —
+        and this particular theme even made it into Debian's official Adminer package.</p>
+        <div class="shot" style="padding:0; border-style:solid;">
+          <img src="https://raw.githubusercontent.com/dracula/adminer/master/screenshot.png" alt="Dracula theme applied to Adminer" loading="lazy">
+        </div>
+        <div class="stack">CSS · Dracula org · draculatheme.com/adminer</div>
+        <a class="repo" href="https://github.com/dracula/adminer" target="_blank">github.com/dracula/adminer →</a>
+      </div></div>
     </div>
 
-    <div class="proj">
-      <div class="proj-top">
+    <div class="proj reveal">
+      <button class="proj-top" type="button">
+        <h3>nba-terminal</h3>
+        <div class="proj-top-right">
+          <span class="badge wip">in-progress</span>
+          <span class="chevron">▾</span>
+        </div>
+      </button>
+      <div class="proj-body"><div>
+        <p>I follow the NBA closely and got tired of tabbing over to a browser just to
+        check a score. nba-terminal is a TUI with a live dashboard, East/West standings,
+        league leaders, and a full box score view with per-player stats — all keyboard
+        driven, with a favorite team, light/dark/high-contrast themes, and an offline
+        cache so it still works if the network drops. There's also a CLI mode for
+        scripting: export today's games, standings, or a box score straight to JSON
+        or CSV. I'm packaging it as a Homebrew tap so it'll install with one command —
+        not published yet, still shaping the last pieces.</p>
+        <div class="shot" style="padding:0; border-style:solid;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px;">
+            <img src="img/nba-dashboard.jpg" alt="nba-terminal dashboard view" loading="lazy">
+            <img src="img/nba-boxscore.jpg" alt="nba-terminal box score view" loading="lazy">
+            <img src="img/nba-standings.jpg" alt="nba-terminal standings view" loading="lazy">
+            <img src="img/nba-team-page.jpg" alt="nba-terminal team page view" loading="lazy">
+          </div>
+        </div>
+        <div class="stack">Python · typer · EN/PT</div>
+        <a class="repo" href="https://github.com/douglasdamasio/nba-terminal" target="_blank">nba-terminal →</a>
+      </div></div>
+    </div>
+
+    <div class="proj reveal">
+      <button class="proj-top" type="button">
         <h3>api_4u2</h3>
-        <span class="badge stable">freelance / teaching</span>
-      </div>
-      <p>A company hired me to run a multi-week Python/Flask training for a group of
-      their engineers — anywhere from five to fifteen people at a time, depending on
-      the cohort. This repo is the course material: routing, request handling, and
-      building a working REST API from scratch, the way I taught it.</p>
-      <div class="stack">Python · Flask</div>
-      <a class="repo" href="https://github.com/douglasdamasio/api_4u2" target="_blank">api_4u2 →</a>
+        <div class="proj-top-right">
+          <span class="badge stable">freelance / teaching</span>
+          <span class="chevron">▾</span>
+        </div>
+      </button>
+      <div class="proj-body"><div>
+        <p>A company hired me to run a multi-week Python/Flask training for a group of
+        their engineers — anywhere from five to fifteen people at a time, depending on
+        the cohort. This repo is the course material: routing, request handling, and
+        building a working REST API from scratch, the way I taught it.</p>
+        <div class="stack">Python · Flask</div>
+        <a class="repo" href="https://github.com/douglasdamasio/api_4u2" target="_blank">api_4u2 →</a>
+      </div></div>
     </div>
 
-    <div class="proj">
-      <div class="proj-top">
+    <div class="proj reveal">
+      <button class="proj-top" type="button">
         <h3>home-gallery-frontend</h3>
-        <span class="badge stable">personal</span>
-      </div>
-      <p>I recovered years of family photos from an old external hard drive and
-      needed a way to actually browse them instead of leaving them buried in folders.
-      This is the frontend for that — a Google Photos-style grid grouped by date,
-      with infinite scroll, lazy-loaded thumbnails, a fullscreen viewer with keyboard
-      navigation, and filters by type and date range. Built to talk to a small Python
-      backend that generates the thumbnails.</p>
-      <div class="stack">React · TypeScript · Vite</div>
-      <a class="repo" href="https://github.com/douglasdamasio/home-gallery-frontend" target="_blank">home-gallery-frontend →</a>
+        <div class="proj-top-right">
+          <span class="badge stable">personal</span>
+          <span class="chevron">▾</span>
+        </div>
+      </button>
+      <div class="proj-body"><div>
+        <p>I recovered years of family photos from an old external hard drive and
+        needed a way to actually browse them instead of leaving them buried in folders.
+        This is the frontend for that — a Google Photos-style grid grouped by date,
+        with infinite scroll, lazy-loaded thumbnails, a fullscreen viewer with keyboard
+        navigation, and filters by type and date range. Built to talk to a small Python
+        backend that generates the thumbnails.</p>
+        <div class="stack">React · TypeScript · Vite</div>
+        <a class="repo" href="https://github.com/douglasdamasio/home-gallery-frontend" target="_blank">home-gallery-frontend →</a>
+      </div></div>
     </div>
   </section>
 
-  <section class="family">
+  <section class="family" id="family">
     <div class="sec-head"><h2 class="disp">Family</h2></div>
     <p>Everything above is a weekend or evening project. The reason I have the energy
     for any of it is these two — my wife and son. They're the reason I build things,
     and the reason I care about doing work I can be proud of.</p>
     <div class="fam-grid">
-      <img src="img/family-jerseys.jpg" alt="Douglas with his wife and son">
-      <img src="img/family-playroom.jpg" alt="Douglas holding his son">
+      <img src="img/family-jerseys.jpg" alt="Douglas with his wife and son" loading="lazy">
+      <img src="img/family-playroom.jpg" alt="Douglas holding his son" loading="lazy">
     </div>
   </section>
 
-  <section class="resume">
+  <section class="resume" id="resume">
     <div class="sec-head"><h2 class="disp">About / résumé</h2></div>
     <p>The short version, for anyone hiring: 10+ years as a software engineer, the
     last several focused on distributed systems — including four years at Nubank
     building and running payment authorization for 100M+ customers across five
     countries. Full experience, stack, and background are on my résumé.</p>
-    <a class="resume-link" href="https://douglasdamasio.cv" target="_blank">→ douglasdamasio.cv</a>
+    <div class="resume-actions">
+      <a class="resume-link primary" href="Douglas_Damasio_Resume.pdf" download>↓ Download CV (PDF)</a>
+      <a class="resume-link" href="https://douglasdamasio.cv" target="_blank">→ douglasdamasio.cv</a>
+    </div>
   </section>
 
-  <footer>
+  <footer id="contact">
     <div class="f-title disp">Say hi</div>
     <div class="f-links">
       <a href="https://github.com/douglasdamasio" target="_blank">GitHub</a>
@@ -265,6 +370,52 @@
   </footer>
 </div>
 <script>
+  // accordion: click a project header to expand/collapse it
+  document.querySelectorAll('.proj-top').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.closest('.proj').classList.toggle('expanded');
+    });
+  });
+
+  // scroll progress bar
+  function updateProgress(){
+    const h = document.documentElement;
+    const scrolled = h.scrollTop;
+    const height = h.scrollHeight - h.clientHeight;
+    const pct = height > 0 ? (scrolled / height) * 100 : 0;
+    const bar = document.getElementById('progress');
+    if (bar) bar.style.width = pct + '%';
+  }
+  window.addEventListener('scroll', updateProgress, { passive: true });
+  updateProgress();
+
+  // reveal-on-scroll, with a safe fallback if IntersectionObserver is unavailable
+  const revealEls = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.12 });
+    revealEls.forEach(el => io.observe(el));
+  } else {
+    revealEls.forEach(el => el.classList.add('visible'));
+  }
+  // belt-and-suspenders: never leave content invisible
+  setTimeout(() => revealEls.forEach(el => el.classList.add('visible')), 3000);
+
+  // active dot in the side nav
+  const navLinks = document.querySelectorAll('#side-nav a');
+  const sections = Array.from(navLinks).map(a => document.getElementById(a.dataset.target)).filter(Boolean);
+  if ('IntersectionObserver' in window && sections.length) {
+    const navIo = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const link = document.querySelector(`#side-nav a[data-target="${entry.target.id}"]`);
+        if (link) link.classList.toggle('active', entry.isIntersecting);
+      });
+    }, { rootMargin: '-40% 0px -50% 0px' });
+    sections.forEach(s => navIo.observe(s));
+  }
+
+  // live star/fork count for the featured project
   fetch('https://api.github.com/repos/dracula/adminer')
     .then(r => r.ok ? r.json() : null)
     .then(data => {
